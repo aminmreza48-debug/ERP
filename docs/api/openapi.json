@@ -1,0 +1,229 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "SIPERMA ERP API Specification",
+    "description": "RESTful API Specification for Sistem Informasi ERP Pembayaran dan Keuangan Mahasiswa",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000/api",
+      "description": "Local Development Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "paths": {
+    "/login": {
+      "post": {
+        "summary": "Autentikasi Pengguna Multi-Role",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "identifier": { "type": "string", "example": "admin" },
+                  "password": { "type": "string", "example": "admin123" }
+                },
+                "required": ["identifier", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login berhasil dan token terbit" },
+          "400": { "description": "Field input kosong" },
+          "401": { "description": "Kredensial tidak valid atau password salah" },
+          "403": { "description": "Akun dinonaktifkan" }
+        }
+      }
+    },
+    "/logout": {
+      "post": {
+        "summary": "Logout Pengguna",
+        "tags": ["Authentication"],
+        "responses": {
+          "200": { "description": "Logout berhasil" }
+        }
+      }
+    },
+    "/dashboard": {
+      "get": {
+        "summary": "Ringkasan Statistik Keuangan & KPI",
+        "tags": ["Dashboard"],
+        "responses": {
+          "200": { "description": "Data statistik dashboard berhasil diambil" }
+        }
+      }
+    },
+    "/mahasiswa": {
+      "get": {
+        "summary": "Mendapatkan Daftar Semua Mahasiswa",
+        "tags": ["Mahasiswa"],
+        "responses": {
+          "200": { "description": "Daftar mahasiswa aktif" }
+        }
+      },
+      "post": {
+        "summary": "Menambah Mahasiswa Baru",
+        "tags": ["Mahasiswa"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nim": { "type": "string", "example": "202401099" },
+                  "nama": { "type": "string", "example": "Fajar Ramadhan" },
+                  "prodi": { "type": "string", "example": "Teknik Informatika" },
+                  "angkatan": { "type": "string", "example": "2024" },
+                  "email": { "type": "string", "example": "fajar@siperma.ac.id" }
+                },
+                "required": ["nim", "nama", "prodi", "angkatan"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Mahasiswa berhasil ditambahkan" },
+          "409": { "description": "NIM sudah terdaftar (Duplikat)" },
+          "422": { "description": "Validasi kolom gagal" }
+        }
+      }
+    },
+    "/tagihan": {
+      "get": {
+        "summary": "Melihat Daftar Tagihan",
+        "tags": ["Tagihan"],
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string" } },
+          { "name": "mahasiswa_id", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Data tagihan berhasil diambil" }
+        }
+      },
+      "post": {
+        "summary": "Menerbitkan Tagihan Baru",
+        "tags": ["Tagihan"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "mahasiswa_id": { "type": "integer", "example": 1 },
+                  "jenis_biaya_id": { "type": "integer", "example": 2 },
+                  "semester": { "type": "string", "example": "2024/2025 Ganjil" },
+                  "nominal": { "type": "number", "example": 4500000 }
+                },
+                "required": ["mahasiswa_id", "jenis_biaya_id", "semester", "nominal"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Tagihan berhasil diterbitkan" },
+          "404": { "description": "Mahasiswa tidak ditemukan" },
+          "409": { "description": "Tagihan duplikat semester sama" },
+          "422": { "description": "Nominal <= 0 atau validasi gagal" }
+        }
+      }
+    },
+    "/pembayaran/upload": {
+      "post": {
+        "summary": "Upload Bukti Pembayaran Tagihan",
+        "tags": ["Pembayaran"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "tagihan_id": { "type": "integer", "example": 2 },
+                  "mahasiswa_id": { "type": "integer", "example": 1 },
+                  "nominal_bayar": { "type": "number", "example": 750000 },
+                  "metode_pembayaran": { "type": "string", "example": "Transfer Bank" },
+                  "bank_tujuan": { "type": "string", "example": "Bank Mandiri" },
+                  "bukti_transfer": { "type": "string", "format": "binary" }
+                },
+                "required": ["tagihan_id", "mahasiswa_id", "nominal_bayar"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Bukti berhasil diupload dan menunggu verifikasi" },
+          "400": { "description": "Tagihan sudah lunas" },
+          "403": { "description": "Akses dilarang (bukan pemilik tagihan)" },
+          "409": { "description": "Pembayaran sedang menunggu proses verifikasi" },
+          "422": { "description": "Nominal tidak sesuai atau file tidak valid / terlalu besar" }
+        }
+      }
+    },
+    "/verifikasi/{id}": {
+      "post": {
+        "summary": "Persetujuan (Approve) atau Penolakan (Reject) Pembayaran",
+        "tags": ["Verifikasi"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "verifier_user_id": { "type": "integer", "example": 2 },
+                  "action": { "type": "string", "enum": ["approve", "reject"], "example": "approve" },
+                  "catatan": { "type": "string", "example": "Pembayaran valid dan lunas" }
+                },
+                "required": ["action"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Keputusan verifikasi berhasil diproses" },
+          "400": { "description": "Aksi tidak dikenal" },
+          "404": { "description": "Data pembayaran tidak ditemukan" },
+          "409": { "description": "Pembayaran sudah pernah diproses sebelumnya" },
+          "422": { "description": "Catatan penolakan wajib diisi untuk aksi reject" }
+        }
+      }
+    },
+    "/laporan/pembayaran": {
+      "get": {
+        "summary": "Laporan Realisasi Kas Pembayaran",
+        "tags": ["Laporan"],
+        "responses": {
+          "200": { "description": "Data laporan penerimaan kas" }
+        }
+      }
+    },
+    "/laporan/tunggakan": {
+      "get": {
+        "summary": "Laporan Tunggakan Mahasiswa",
+        "tags": ["Laporan"],
+        "responses": {
+          "200": { "description": "Daftar tagihan mahasiswa yang belum terbayar" }
+        }
+      }
+    }
+  }
+}
+

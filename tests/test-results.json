@@ -1,0 +1,212 @@
+{
+    "timestamp": "2026-11-05T14:55:17+01:00",
+    "total": 29,
+    "passed": 29,
+    "failed": 0,
+    "pass_rate": 100,
+    "results": [
+        {
+            "id": "TC-AUTH-01",
+            "description": "Empty username and password rejection",
+            "expected": "400",
+            "actual": "400",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-AUTH-02",
+            "description": "Non-existent user authentication failure",
+            "expected": "401",
+            "actual": "401",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-AUTH-03",
+            "description": "Invalid password rejection",
+            "expected": "401",
+            "actual": "401",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-AUTH-04",
+            "description": "Valid Admin login authentication",
+            "expected": "200",
+            "actual": "200",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-AUTH-05",
+            "description": "Valid Mahasiswa login authentication",
+            "expected": "200",
+            "actual": "200",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-AUTH-06",
+            "description": "Admin universal role access",
+            "expected": "true",
+            "actual": "true",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-AUTH-07",
+            "description": "Bendahara authorized access",
+            "expected": "true",
+            "actual": "true",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-AUTH-08",
+            "description": "Mahasiswa forbidden on bendahara route",
+            "expected": "false",
+            "actual": "false",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-TAG-01",
+            "description": "BVA: Nominal = 0 rejected",
+            "expected": "422",
+            "actual": "422",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-TAG-02",
+            "description": "BVA: Nominal < 0 rejected",
+            "expected": "422",
+            "actual": "422",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-TAG-03",
+            "description": "Unknown mahasiswa rejection",
+            "expected": "404",
+            "actual": "404",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-TAG-04",
+            "description": "Valid invoice creation",
+            "expected": "201",
+            "actual": "201",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-TAG-05",
+            "description": "Duplicate active invoice prevention",
+            "expected": "409",
+            "actual": "409",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-PAY-01",
+            "description": "Proof validation: empty file",
+            "expected": "false",
+            "actual": "false",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-PAY-02",
+            "description": "Proof validation: BVA size > 2MB rejected",
+            "expected": "FILE_TOO_LARGE",
+            "actual": "FILE_TOO_LARGE",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-PAY-03",
+            "description": "Proof validation: extension not allowed",
+            "expected": "FILE_INVALID_TYPE",
+            "actual": "FILE_INVALID_TYPE",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-PAY-04",
+            "description": "Proof validation: valid JPG accepted",
+            "expected": "true",
+            "actual": "true",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-PAY-05",
+            "description": "Payment submission: nominal mismatch rejected",
+            "expected": "422",
+            "actual": "422",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-PAY-06",
+            "description": "Payment submission: cross-student forbidden",
+            "expected": "403",
+            "actual": "403",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-PAY-07",
+            "description": "Payment submission: already lunas rejected",
+            "expected": "400",
+            "actual": "400",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-PAY-08",
+            "description": "Payment submission: valid transfer accepted",
+            "expected": "201",
+            "actual": "201",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-VER-01",
+            "description": "Decision table: invalid action rejected",
+            "expected": "400",
+            "actual": "400",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-VER-02",
+            "description": "Decision table: payment not found",
+            "expected": "404",
+            "actual": "404",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-VER-03",
+            "description": "Decision table: reject without reason rejected",
+            "expected": "422",
+            "actual": "422",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-VER-04",
+            "description": "Decision table: approve pending payment",
+            "expected": "200",
+            "actual": "200",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-VER-05",
+            "description": "State transition: tagihan marked lunas on approve",
+            "expected": "lunas",
+            "actual": "lunas",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-VER-06",
+            "description": "Idempotency: already processed payment rejected",
+            "expected": "409",
+            "actual": "409",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-DB-01",
+            "description": "Database has all seed users",
+            "expected": ">= 6",
+            "actual": "6",
+            "status": "PASSED"
+        },
+        {
+            "id": "TC-DB-02",
+            "description": "Audit logs recording actions",
+            "expected": "> 0",
+            "actual": "6",
+            "status": "PASSED"
+        }
+    ]
+}

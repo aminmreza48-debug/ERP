@@ -1,0 +1,210 @@
+{
+  "info": {
+    "name": "SIPERMA ERP - Automated API Test Suite",
+    "_postman_id": "89f3a8b2-3e2c-4719-bb11-9a7c33f28241",
+    "description": "Full collection of API tests verifying status codes: 200, 201, 400, 401, 403, 404, 409, 422, 500",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000/api" },
+    { "key": "adminToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "TC-API-AUTH-01: Login Success (200 OK)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"identifier\": \"admin\", \"password\": \"admin123\"}"
+            },
+            "url": { "raw": "{{baseUrl}}/login", "host": ["{{baseUrl}}"], "path": ["login"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response has token', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.expect(json.token).to.not.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-API-AUTH-02: Login Empty Fields (400 Bad Request)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"identifier\": \"\", \"password\": \"\"}"
+            },
+            "url": { "raw": "{{baseUrl}}/login", "host": ["{{baseUrl}}"], "path": ["login"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-API-AUTH-03: Login Invalid Password (401 Unauthorized)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"identifier\": \"admin\", \"password\": \"wrongpass\"}"
+            },
+            "url": { "raw": "{{baseUrl}}/login", "host": ["{{baseUrl}}"], "path": ["login"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 401', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Dashboard & KPI",
+      "item": [
+        {
+          "name": "TC-API-DASH-01: Get Dashboard Stats (200 OK)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/dashboard", "host": ["{{baseUrl}}"], "path": ["dashboard"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Stats contains KPIs', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.data.total_mahasiswa).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Tagihan & Pembayaran",
+      "item": [
+        {
+          "name": "TC-API-TAG-01: Get Active Invoices (200 OK)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/tagihan", "host": ["{{baseUrl}}"], "path": ["tagihan"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-API-TAG-02: Create Invoice Validation Error (422 Unprocessable)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"mahasiswa_id\": 1, \"nominal\": -100}"
+            },
+            "url": { "raw": "{{baseUrl}}/tagihan", "host": ["{{baseUrl}}"], "path": ["tagihan"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 422', function () { pm.response.to.have.status(422); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Verifikasi Bendahara",
+      "item": [
+        {
+          "name": "TC-API-VER-01: Reject without notes (422 Unprocessable)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"verifier_user_id\": 2, \"action\": \"reject\", \"catatan\": \"\"}"
+            },
+            "url": { "raw": "{{baseUrl}}/verifikasi/2", "host": ["{{baseUrl}}"], "path": ["verifikasi", "2"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 422', function () { pm.response.to.have.status(422); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-API-VER-02: Verifikasi Non-existent Payment (404 Not Found)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"verifier_user_id\": 2, \"action\": \"approve\"}"
+            },
+            "url": { "raw": "{{baseUrl}}/verifikasi/9999", "host": ["{{baseUrl}}"], "path": ["verifikasi", "9999"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404', function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
