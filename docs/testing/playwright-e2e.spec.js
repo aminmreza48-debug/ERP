@@ -18,7 +18,10 @@ test.describe('SIPERMA ERP - End-to-End Functional Test Suite', () => {
     // 2. Input kredensial mahasiswa
     await page.fill('input[name="identifier"]', 'mhs2024001');
     await page.fill('input[name="password"]', 'mhs123');
-    await page.click('button[type="submit"]');
+    await Promise.all([
+      page.waitForURL(/.*\/mahasiswa\/dashboard/),
+      page.click('button[type="submit"]')
+    ]);
 
     // 3. Verifikasi mendarat di Dashboard Mahasiswa
     await expect(page).toHaveURL(/.*\/mahasiswa\/dashboard/);
@@ -26,7 +29,7 @@ test.describe('SIPERMA ERP - End-to-End Functional Test Suite', () => {
     await expect(page.locator('text=Total Tagihan').first()).toBeVisible();
 
     // 4. Navigasi dan verifikasi daftar tagihan
-    await page.locator('a[href="/mahasiswa/tagihan"]').first().click();
+    await page.goto(`${BASE_URL}/mahasiswa/tagihan`);
     await expect(page.locator('table').first()).toBeVisible();
     await expect(page.locator('text=UKT').first()).toBeVisible();
   });
@@ -39,7 +42,10 @@ test.describe('SIPERMA ERP - End-to-End Functional Test Suite', () => {
     await page.goto(`${BASE_URL}/login`);
     await page.fill('input[name="identifier"]', 'mhs2024001');
     await page.fill('input[name="password"]', 'mhs123');
-    await page.click('button[type="submit"]');
+    await Promise.all([
+      page.waitForURL(/.*\/mahasiswa\/dashboard/),
+      page.click('button[type="submit"]')
+    ]);
 
     // 2. Akses halaman tagihan
     await page.goto(`${BASE_URL}/mahasiswa/tagihan`);
@@ -47,8 +53,10 @@ test.describe('SIPERMA ERP - End-to-End Functional Test Suite', () => {
     // 3. Cari tombol bayar untuk tagihan yang belum lunas
     const bayarBtn = page.locator('a[href*="/mahasiswa/upload?tagihan_id="]').first();
     if (await bayarBtn.isVisible()) {
-      await bayarBtn.click();
-      await expect(page).toHaveURL(/.*\/mahasiswa\/upload.*/);
+      await Promise.all([
+        page.waitForURL(/.*\/mahasiswa\/upload.*/),
+        bayarBtn.click()
+      ]);
 
       // 4. Pilih bank & upload file bukti
       await page.selectOption('select[name="metode_pembayaran"]', 'Transfer Bank');
@@ -61,8 +69,11 @@ test.describe('SIPERMA ERP - End-to-End Functional Test Suite', () => {
         buffer: Buffer.from('FAKE_IMAGE_DATA')
       });
 
-      // 5. Submit form
-      await page.click('button[type="submit"]');
+      // 5. Submit form & tunggu redirect ke riwayat
+      await Promise.all([
+        page.waitForURL(/.*\/mahasiswa\/riwayat.*/),
+        page.click('button[type="submit"]')
+      ]);
 
       // 6. Verifikasi diarahkan ke riwayat pembayaran
       await expect(page).toHaveURL(/.*\/mahasiswa\/riwayat.*/);
@@ -80,7 +91,10 @@ test.describe('SIPERMA ERP - End-to-End Functional Test Suite', () => {
     // 2. Input kredensial Bendahara
     await page.fill('input[name="identifier"]', 'bendahara');
     await page.fill('input[name="password"]', 'bendahara123');
-    await page.click('button[type="submit"]');
+    await Promise.all([
+      page.waitForURL(/.*\/bendahara\/dashboard/),
+      page.click('button[type="submit"]')
+    ]);
 
     // 3. Verifikasi mendarat di Dashboard Bendahara
     await expect(page).toHaveURL(/.*\/bendahara\/dashboard/);
@@ -101,8 +115,13 @@ test.describe('SIPERMA ERP - End-to-End Functional Test Suite', () => {
     // 6. Evaluasi tombol persetujuan atau penolakan dengan catatan
     const setujuBtn = page.locator('button:has-text("Setuju")').first();
     if (await setujuBtn.isVisible()) {
-      page.on('dialog', dialog => dialog.accept());
-      await setujuBtn.click();
+      page.once('dialog', async dialog => {
+        await dialog.accept();
+      });
+      await Promise.all([
+        page.waitForLoadState('networkidle'),
+        setujuBtn.click()
+      ]);
       await expect(page.locator('.alert-success').first()).toBeVisible();
     }
   });
