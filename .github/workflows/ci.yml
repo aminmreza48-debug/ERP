@@ -1,0 +1,164 @@
+name: SIPERMA ERP - CI/CD Automated Testing Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  # =========================================================================
+  # JOB 1: Code Quality, Database Integrity & White Box Unit Tests
+  # =========================================================================
+  unit-and-whitebox-tests:
+    name: "SQA Phase 1-4: Unit & White Box Suite"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo, pdo_sqlite, sqlite3, curl, json, mbstring
+          coverage: none
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: PHP Lint (Syntax Check)
+        run: |
+          echo "Checking PHP syntax across codebase..."
+          find src config public tests -type f -name "*.php" -exec php -l {} +
+
+      - name: Initialize SQLite Test Database
+        run: |
+          mkdir -p storage/sessions storage/uploads
+          chmod -R 777 storage
+          php database/init-db.php
+
+      - name: Execute SQA Automated Test Suite (PHP 29 Test Cases)
+        run: |
+          php tests/test-runner.php
+
+      - name: Install Node Dependencies
+        run: |
+          npm install
+
+      - name: Run Jest White Box Unit Tests with Coverage (Phase 4)
+        run: |
+          npx jest --coverage --colors
+
+      - name: Upload Jest Coverage Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jest-coverage-report
+          path: coverage/
+          retention-days: 14
+
+      - name: Upload Test Results JSON
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sqa-test-results
+          path: tests/test-results.json
+          retention-days: 14
+
+  # =========================================================================
+  # JOB 2: REST API Testing (Newman) & E2E Testing (Playwright)
+  # =========================================================================
+  api-and-e2e-tests:
+    name: "SQA Phase 5-6: API (Newman) & E2E (Playwright)"
+    needs: unit-and-whitebox-tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo, pdo_sqlite, sqlite3, curl, json, mbstring
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Node Dependencies
+        run: |
+          npm install
+
+      - name: Install Playwright Chromium Browser
+        run: |
+          npx playwright install --with-deps chromium
+
+      - name: Initialize Fresh Database & Storage
+        run: |
+          mkdir -p storage/sessions storage/uploads
+          chmod -R 777 storage
+          php database/init-db.php
+
+      - name: Start SIPERMA Web Server (Port 8080)
+        run: |
+          php -S 0.0.0.0:8080 -t public > /dev/null 2>&1 &
+          echo "Waiting for SIPERMA web server to start on port 8080..."
+          for i in {1..30}; do
+            if curl -s http://127.0.0.1:8080 > /dev/null; then
+              echo "Server is ready on http://127.0.0.1:8080"
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Run SQA Phase 5: REST API Testing via Newman / Postman
+        run: |
+          npx newman run docs/testing/postman-collection.json \
+            --env-var "baseUrl=http://127.0.0.1:8080/api" \
+            --reporters cli
+
+      - name: Run SQA Phase 6: Automated Playwright E2E Tests
+        env:
+          BASE_URL: "http://127.0.0.1:8080"
+        run: |
+          npx playwright test docs/testing/playwright-e2e.spec.js
+
+      - name: Upload Playwright Test Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+
+  # =========================================================================
+  # JOB 3: CI/CD Pipeline Summary & SQA Quality Gate
+  # =========================================================================
+  quality-gate-summary:
+    name: "SQA Quality Gate Verification"
+    needs: [unit-and-whitebox-tests, api-and-e2e-tests]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SQA Quality Gate Passed
+        run: |
+          echo "=========================================================="
+          echo "  SIPERMA ERP - SQA CI/CD QUALITY GATE PASSED (100% OK)   "
+          echo "=========================================================="
+          echo "✓ PHP Syntax & Lint Check: Passed"
+          echo "✓ SQLite Database & Seeder Integrity: Passed"
+          echo "✓ Phase 1-4: Unit Tests, White Box & Business Logic: Passed"
+          echo "✓ Phase 4: Jest Code Coverage (Services): Passed"
+          echo "✓ Phase 5: Newman REST API Testing: Passed"
+          echo "✓ Phase 6: Playwright Automated E2E Testing: Passed"
+          echo "=========================================================="
