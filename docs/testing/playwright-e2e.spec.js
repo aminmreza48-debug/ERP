@@ -3,7 +3,7 @@
 
 const { test, expect } = require('@playwright/test');
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:8080';
+const BASE_URL = process.env.BASE_URL || 'http://127.0.0.1:8080';
 
 test.describe('SIPERMA ERP - End-to-End Functional Test Suite', () => {
 
