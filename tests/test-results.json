@@ -1,5 +1,5 @@
 {
-    "timestamp": "2026-11-09T02:17:18+01:00",
+    "timestamp": "2026-11-09T03:15:51+01:00",
     "total": 29,
     "passed": 29,
     "failed": 0,
@@ -205,7 +205,7 @@
             "id": "TC-DB-02",
             "description": "Audit logs recording actions",
             "expected": "> 0",
-            "actual": "13",
+            "actual": "5",
             "status": "PASSED"
         }
     ]

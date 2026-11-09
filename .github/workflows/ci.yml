@@ -58,6 +58,10 @@ jobs:
         run: |
           npx jest --coverage --colors
 
+      - name: Reset Database for End-to-End & API Testing
+        run: |
+          php database/init-db.php
+
       - name: Start Background Web Server on Port 8080
         run: |
           php -S 0.0.0.0:8080 -t public > /dev/null 2>&1 &

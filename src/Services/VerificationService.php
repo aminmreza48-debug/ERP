@@ -26,7 +26,18 @@ class VerificationService {
             ];
         }
 
-        // 2. Fetch payment record
+        // 2. Decision Table Rule: Reject requires reason/note (Payload Validation)
+        $trimmedCatatan = trim($catatan ?? '');
+        if ($action === 'reject' && empty($trimmedCatatan)) {
+            return [
+                'success' => false,
+                'status_code' => 422,
+                'error_code' => 'CATATAN_REQUIRED_ON_REJECT',
+                'message' => 'Catatan alasan penolakan wajib diisi untuk memberi tahu mahasiswa'
+            ];
+        }
+
+        // 3. Fetch payment record
         $stmt = $this->db->prepare(
             'SELECT p.*, t.nomor_tagihan, m.user_id as student_user_id, m.nama as nama_mhs 
              FROM pembayaran p
@@ -46,24 +57,13 @@ class VerificationService {
             ];
         }
 
-        // 3. State check: only pending payments can be verified
+        // 4. State check: only pending payments can be verified
         if ($payment['status'] !== 'menunggu_verifikasi') {
             return [
                 'success' => false,
                 'status_code' => 409,
                 'error_code' => 'PAYMENT_ALREADY_PROCESSED',
                 'message' => 'Pembayaran ini sudah pernah diproses sebelumnya (Status: ' . $payment['status'] . ')'
-            ];
-        }
-
-        // 4. Decision Table Rule: Reject requires reason/note
-        $trimmedCatatan = trim($catatan ?? '');
-        if ($action === 'reject' && empty($trimmedCatatan)) {
-            return [
-                'success' => false,
-                'status_code' => 422,
-                'error_code' => 'CATATAN_REQUIRED_ON_REJECT',
-                'message' => 'Catatan alasan penolakan wajib diisi untuk memberi tahu mahasiswa'
             ];
         }
 

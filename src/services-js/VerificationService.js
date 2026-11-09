@@ -17,6 +17,16 @@ class VerificationService {
       };
     }
 
+    const trimmedCatatan = (catatan || '').trim();
+    if (action === 'reject' && !trimmedCatatan) {
+      return {
+        success: false,
+        statusCode: 422,
+        errorCode: 'CATATAN_REQUIRED_ON_REJECT',
+        message: 'Catatan alasan penolakan wajib diisi untuk memberi tahu mahasiswa'
+      };
+    }
+
     const payment = await this.db.findPembayaran(paymentId);
     if (!payment) {
       return {
@@ -33,16 +43,6 @@ class VerificationService {
         statusCode: 409,
         errorCode: 'PAYMENT_ALREADY_PROCESSED',
         message: `Pembayaran ini sudah pernah diproses sebelumnya (Status: ${payment.status})`
-      };
-    }
-
-    const trimmedCatatan = (catatan || '').trim();
-    if (action === 'reject' && !trimmedCatatan) {
-      return {
-        success: false,
-        statusCode: 422,
-        errorCode: 'CATATAN_REQUIRED_ON_REJECT',
-        message: 'Catatan alasan penolakan wajib diisi untuk memberi tahu mahasiswa'
       };
     }
 
