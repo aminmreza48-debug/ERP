@@ -22,13 +22,13 @@ test.describe('SIPERMA ERP - End-to-End Functional Test Suite', () => {
 
     // 3. Verifikasi mendarat di Dashboard Mahasiswa
     await expect(page).toHaveURL(/.*\/mahasiswa\/dashboard/);
-    await expect(page.locator('h3')).toContainText('Ahmad Fauzi');
-    await expect(page.locator('text=Total Tagihan')).toBeVisible();
+    await expect(page.locator('h3').first()).toContainText('Ahmad Fauzi');
+    await expect(page.locator('text=Total Tagihan').first()).toBeVisible();
 
     // 4. Navigasi dan verifikasi daftar tagihan
-    await page.click('a[href="/mahasiswa/tagihan"]');
-    await expect(page.locator('table')).toBeVisible();
-    await expect(page.locator('text=UKT')).toBeVisible();
+    await page.locator('a[href="/mahasiswa/tagihan"]').first().click();
+    await expect(page.locator('table').first()).toBeVisible();
+    await expect(page.locator('text=UKT').first()).toBeVisible();
   });
 
   // =========================================================================
@@ -66,7 +66,7 @@ test.describe('SIPERMA ERP - End-to-End Functional Test Suite', () => {
 
       // 6. Verifikasi diarahkan ke riwayat pembayaran
       await expect(page).toHaveURL(/.*\/mahasiswa\/riwayat.*/);
-      await expect(page.locator('text=Menunggu Verifikasi')).toBeVisible();
+      await expect(page.locator('text=Menunggu Verifikasi').first()).toBeVisible();
     }
   });
 
@@ -84,17 +84,17 @@ test.describe('SIPERMA ERP - End-to-End Functional Test Suite', () => {
 
     // 3. Verifikasi mendarat di Dashboard Bendahara
     await expect(page).toHaveURL(/.*\/bendahara\/dashboard/);
-    await expect(page.locator('h3')).toContainText('Dashboard Bendahara Keuangan');
+    await expect(page.locator('h3').first()).toContainText('Dashboard Bendahara Keuangan');
 
     // 4. Masuk ke halaman verifikasi pembayaran
     await page.goto(`${BASE_URL}/bendahara/verifikasi`);
-    await expect(page.locator('table')).toBeVisible();
+    await expect(page.locator('table').first()).toBeVisible();
 
     // 5. Cek preview bukti transfer jika tombol ada
     const bukaBuktiBtn = page.locator('button:has-text("Buka Bukti")').first();
     if (await bukaBuktiBtn.isVisible()) {
       await bukaBuktiBtn.click();
-      await expect(page.locator('.modal-content')).toBeVisible();
+      await expect(page.locator('.modal.show .modal-content').or(page.locator('.modal-content').first())).toBeVisible();
       await page.keyboard.press('Escape'); // Tutup modal
     }
 
@@ -103,9 +103,8 @@ test.describe('SIPERMA ERP - End-to-End Functional Test Suite', () => {
     if (await setujuBtn.isVisible()) {
       page.on('dialog', dialog => dialog.accept());
       await setujuBtn.click();
-      await expect(page.locator('.alert-success')).toBeVisible();
+      await expect(page.locator('.alert-success').first()).toBeVisible();
     }
   });
 
 });
-
