@@ -131,6 +131,10 @@ class TestRunner {
         $fRes4 = $service->validateProofFile(['name' => 'bukti_transfer.jpg', 'size' => 500000]);
         $this->assert($fRes4['valid'] === true, 'TC-PAY-04', 'Proof validation: valid JPG accepted', 'true', 'true');
 
+        // Precondition: ensure tagihan 2 is ready for test submission
+        $this->db->exec("UPDATE tagihan SET status = 'belum_bayar' WHERE id = 2");
+        $this->db->exec("DELETE FROM pembayaran WHERE tagihan_id = 2");
+
         // Payment submission - Nominal mismatch
         $resM = $service->submitPayment(2, 1, 999999, 'Transfer Bank', 'Bank BCA', ['name' => 'bukti.jpg', 'size' => 50000]);
         $this->assert($resM['success'] === false && $resM['status_code'] === 422, 'TC-PAY-05', 'Payment submission: nominal mismatch rejected', '422', (string)$resM['status_code']);
@@ -151,6 +155,10 @@ class TestRunner {
     private function testVerificationService(): void {
         echo "\n--- 4. VerificationService (Decision Table & State Transition) ---\n";
         $service = new VerificationService($this->db);
+
+        // Precondition: reset fixture payment id 2 and tagihan 3 to pending state
+        $this->db->exec("UPDATE pembayaran SET status = 'menunggu_verifikasi', catatan = NULL WHERE id = 2");
+        $this->db->exec("UPDATE tagihan SET status = 'menunggu_verifikasi' WHERE id = 3");
 
         // Invalid action
         $res = $service->processDecision(1, 2, 'invalid_action');
